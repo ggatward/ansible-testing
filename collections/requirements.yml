@@ -1,6 +1,4 @@
 ---
 collections:
   - name: ovirt.ovirt
-    type: file
-    source: file:///tmp/ovirt-ovirt-1.1.4.tar.gz
-
+  - name: awx.awx
