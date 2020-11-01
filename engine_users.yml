@@ -1,0 +1,44 @@
+---
+- name: Setup oVirt hosted engine
+  hosts: localhost
+  connection: local
+  collections:
+    - ovirt.ovirt
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - block:
+        - name: Obtain SSO token with using username/password credentials
+          ovirt.ovirt.ovirt_auth:
+            url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
+            username: admin@internal
+            password: "{{ vault_ovirt_admin_password }}"
+
+        - name: set up oVirt users/groups
+          ovirt_group:
+            auth: "{{ ovirt_auth }}"
+            name: ovirt_admins
+            domain: gatwards.org-authz
+
+        # - name: set up oVirt roles
+        #   ovirt_role:
+        #     auth: "{{ ovirt_auth }}"
+        #     name: PrometheusReader
+        #     permits:
+        #     - login
+
+        - name: Grant Permissions
+          ovirt_permission:
+            auth: "{{ ovirt_auth }}"
+            group_name: ovirt_admins
+            authz_name: gatwards.org-authz
+            object_type: data_center
+            object_name: Support
+            role: SuperUser
+
+      always:
+        - name: Always revoke the SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"

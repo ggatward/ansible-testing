@@ -1,0 +1,22 @@
+---
+
+he_bridge_if: eno1
+he_fqdn: testengine.lab.home.gatwards.org
+he_ansible_host_name: "{{ ansible_fqdn }}"
+he_vcpus: 4
+he_domain_type: nfs
+he_nfs_version: v3
+he_storage_domain_addr: 172.22.4.240
+he_storage_domain_path: testnfs1
+
+he_db_password: 'ChangeMe'
+he_dwh_db_password: 'ChangeMe'
+he_appliance_password: 'ChangeMe'
+he_admin_password: 'ChangeMe'
+
+he_vm_ip_addr: 172.22.4.225
+he_vm_ip_prefix: 24
+he_dns_addr: 172.22.1.3
+he_default_gateway: 172.22.4.1
+he_vm_etc_hosts: true
+

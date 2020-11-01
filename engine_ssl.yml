@@ -1,0 +1,14 @@
+---
+- name: Setup oVirt hosted engine
+  hosts: ovirt-engine
+  collections:
+    - ovirt.ovirt
+
+  tasks:
+  - name: set up TLS for engine services
+    import_role:
+      name: ovirt-ansible-engine-ssl
+    vars:
+      httpd_key_file: /etc/pki/tls/private/{{ ansible_fqdn }}.key
+      httpd_cert_file: /etc/pki/tls/certs/{{ ansible_fqdn }}.pem
+      httpd_ca_cert: "{{ lookup('file', '/etc/ipa/ca.crt') }}"

@@ -1,4 +1,8 @@
 ---
-collections:
-- ovirt.ovirt
+- name: ovirt-ansible-engine-ssl
+  src: https://github.com/djasa/ovirt-ansible-engine-ssl.git
+  scm: git
 
+- name: ovirt-engine-ldap
+  src: https://github.com/jobcespedes/engine-ldap.git
+  scm: git

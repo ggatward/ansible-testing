@@ -1,0 +1,110 @@
+---
+- name: Setup oVirt storage
+  hosts: localhost
+  connection: local
+  collections:
+    - ovirt.ovirt
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - block:
+        - name: Obtain SSO token with using username/password credentials
+          ovirt.ovirt.ovirt_auth:
+            url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
+            username: admin@internal
+            password: "{{ vault_ovirt_admin_password }}"
+
+        # Create network
+        - name: Configure ovirtmgmt network
+          ovirt_network:
+            auth: "{{ ovirt_auth }}"
+            data_center: Support
+            clusters:
+              - name: Support
+                assigned: true
+                display: true
+                migration: true
+                required: true
+            name: ovirtmgmt
+            mtu: 1500
+            vm_network: true
+
+        - name: Configure Lab VLAN4 network
+          ovirt_network:
+            auth: "{{ ovirt_auth }}"
+            data_center: Support
+            clusters:
+              - name: Support
+                assigned: true
+                display: false
+                migration: false
+                required: true
+            name: Lab
+            vlan_tag: 4
+            mtu: 1500
+            vm_network: true
+
+        - name: Configure Disco VLAN5 network
+          ovirt_network:
+            auth: "{{ ovirt_auth }}"
+            data_center: Support
+            clusters:
+              - name: Support
+                assigned: true
+                display: false
+                migration: false
+                required: true
+            name: Disco
+            vlan_tag: 5
+            mtu: 1500
+            vm_network: true
+
+        - name: Configure VLAN6 network
+          ovirt_network:
+            auth: "{{ ovirt_auth }}"
+            data_center: Support
+            clusters:
+              - name: Support
+                assigned: true
+                display: false
+                migration: false
+                required: true
+            name: Vlan6
+            vlan_tag: 6
+            mtu: 1500
+            vm_network: true
+
+        # Assign myvlan1 and myvlan2 vlans to host eth0 interface:
+        - name: Configure eno1 interface
+          ovirt_host_network:
+            auth: "{{ ovirt_auth }}"
+            name: baremetal2.lab.home.gatwards.org
+            interface: eno1
+            networks:
+              - name: ovirtmgmt
+                boot_protocol: static
+                address: 172.22.4.12
+                netmask: 255.255.255.0
+                gateway: 172.22.4.1
+                version: v4
+
+        - name: Configure ens5f0 interface
+          ovirt_host_network:
+            auth: "{{ ovirt_auth }}"
+            name: baremetal2.lab.home.gatwards.org
+            interface: ens5f0
+            networks:
+              - name: Lab
+                boot_protocol: none
+              - name: Disco
+                boot_protocol: none
+              - name: Vlan6
+                boot_protocol: none
+
+
+      always:
+        - name: Always revoke the SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"

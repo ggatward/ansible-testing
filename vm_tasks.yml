@@ -1,0 +1,63 @@
+---
+- name: oVirt ansible collection
+  hosts: localhost
+  connection: local
+  collections:
+    - ovirt.ovirt
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - block:
+        - name: Obtain SSO token with using username/password credentials
+          ovirt.ovirt.ovirt_auth:
+            url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
+            username: admin@internal
+            password: "{{ vault_ovirt_admin_password }}"
+
+
+
+
+
+        - ovirt_vm:
+            auth: "{{ ovirt_auth }}"
+            state: absent
+            name: myvm
+
+
+        - name: Create and assign affinity group to VMs a-vm1 and a-vm2 with a-host1 and a-host2
+          ovirt_affinity_group:
+            name: az-a
+            cluster: mycluster
+            vm_enforcing: false      # False allows VM to start even if hosts cannot be met
+            vm_rule: positive
+            host_enforcing: false    # False will allow hosts not listed to be used if needed
+            host_rule: positive
+            vms:
+              - a-vm1
+              - a-vm2
+            hosts:
+              - a-host1
+              - a-host2
+
+        - name: Create and assign affinity group to VMs b-vm1 and b-vm2 with b-host1 and b-host2
+          ovirt_affinity_group:
+            name: az-b
+            cluster: mycluster
+            vm_enforcing: false
+            vm_rule: positive
+            host_enforcing: false
+            host_rule: positive
+            vms:
+              - b-vm1
+              - b-vm2
+            hosts:
+              - b-host1
+              - b-host2
+
+
+      always:
+        - name: Always revoke the SSO token
+          ovirt_auth:
+            state: absent
+            ovirt_auth: "{{ ovirt_auth }}"

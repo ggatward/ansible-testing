@@ -1,0 +1,28 @@
+---
+- name: Setup oVirt hosted engine
+  hosts: ovirt-engine
+  collections:
+    - ovirt.ovirt
+  vars_files:
+    - vault.yml
+
+  tasks:
+  - name: set up LDAP auth
+    import_role:
+      name: ovirt-engine-ldap
+    vars:
+      ovirt_engine_ldap_setup:
+        aaaProfileName: gatwards.org
+        profile: ipa
+        useDNS: True
+        serverset: round-robin
+        protocol: starttls
+        hosts: ipa1.ipa.home.gatwards.org ipa2.ipa.home.gatwards.org
+        user: uid=svc-ovirt,cn=users,cn=accounts,dc=ipa,dc=home,dc=gatwards,dc=org
+        baseDN: dc=ipa,dc=home,dc=gatwards,dc=org
+        password: "{{ vault_ovirt_ldap_password }}"
+        toolEnable: False
+        configOverwrite: True
+        useVmSso: False
+        cacert_method: insecure
+        autoAcceptDefault: True
