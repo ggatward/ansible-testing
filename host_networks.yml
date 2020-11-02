@@ -42,7 +42,7 @@
                 required: true
             name: Lab
             vlan_tag: 4
-            mtu: 1500
+            mtu: 9000
             vm_network: true
 
         - name: Configure Disco VLAN5 network
@@ -57,7 +57,7 @@
                 required: true
             name: Disco
             vlan_tag: 5
-            mtu: 1500
+            mtu: 9000
             vm_network: true
 
         - name: Configure VLAN6 network
@@ -72,7 +72,7 @@
                 required: true
             name: Vlan6
             vlan_tag: 6
-            mtu: 1500
+            mtu: 9000
             vm_network: true
 
         # Assign myvlan1 and myvlan2 vlans to host eth0 interface:
@@ -93,7 +93,14 @@
           ovirt_host_network:
             auth: "{{ ovirt_auth }}"
             name: baremetal2.lab.home.gatwards.org
-            interface: ens5f0
+            bond:
+              name: bond_trunk
+              mode: 1
+              options:
+                primary: ens5f2
+              interfaces:
+              - ens5f2
+              - ens5f3
             networks:
               - name: Lab
                 boot_protocol: none
@@ -101,6 +108,8 @@
                 boot_protocol: none
               - name: Vlan6
                 boot_protocol: none
+
+
 
 
       always:
