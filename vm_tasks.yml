@@ -6,6 +6,12 @@
     - ovirt.ovirt
   vars_files:
     - vault.yml
+  vars:
+    ovirt_hosts:
+    - host: baremetal2.lab.home.gatwards.org
+      address: 172.22.4.12
+    - host: baremetal5.lab.home.gatwards.org
+      address: 172.22.4.15
 
   tasks:
     - block:
@@ -16,76 +22,51 @@
             password: "{{ vault_ovirt_admin_password }}"
 
 
-        # - ovirt_vm:
-        #     auth: "{{ ovirt_auth }}"
-        #     state: absent
-        #     name: myvm
+        - name: Set empty arrays
+          set_fact:
+            a_list: []
+            b_list: []
+
+        - name: Add A hosts to A
+          set_fact:
+            a_list: "{{ a_list + [ item.host ] }}"
+          with_items:
+          - "{{ ovirt_hosts }}"
+          when: '"baremetal2" in item.host'
+
+        - name: Add B hosts to B
+          set_fact:
+            b_list: "{{ b_list + [ item.host ] }}"
+          with_items:
+          - "{{ ovirt_hosts }}"
+          when: '"baremetal5" in item.host'
 
 
-        # - name: Create and assign affinity group to VMs a-vm1 and a-vm2 with a-host1 and a-host2
-        #   ovirt_affinity_group:
-        #     name: az-a
-        #     cluster: mycluster
-        #     vm_enforcing: false      # False allows VM to start even if hosts cannot be met
-        #     vm_rule: positive
-        #     host_enforcing: false    # False will allow hosts not listed to be used if needed
-        #     host_rule: positive
-        #     vms:
-        #       - a-vm1
-        #       - a-vm2
-        #     hosts:
-        #       - a-host1
-        #       - a-host2
-
-        # - name: Create and assign affinity group to VMs b-vm1 and b-vm2 with b-host1 and b-host2
-        #   ovirt_affinity_group:
-        #     name: az-b
-        #     cluster: mycluster
-        #     vm_enforcing: false
-        #     vm_rule: positive
-        #     host_enforcing: false
-        #     host_rule: positive
-        #     vms:
-        #       - b-vm1
-        #       - b-vm2
-        #     hosts:
-        #       - b-host1
-        #       - b-host2
-
-
-        # - name: Import cloud-ready disk image
-        #   ovirt_disk:
-        #     auth: "{{ ovirt_auth }}"
-        #     name: CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64
-        #     description: CentOS 8.1 Generic Cloud Image
-        #     upload_image_path: /home/geoff/Downloads/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
-        #     storage_domain: VMstore
-
-
-
-        # Create temp VM using disk
-        - ovirt_vm:
+        - name: Create and assign affinity group to VMs a-vm1 and a-vm2 with a-host1 and a-host2
+          ovirt_affinity_group:
             auth: "{{ ovirt_auth }}"
-            name: c8_temp_vm
+            name: az-a
             cluster: Support
-            disks:
-              - name: CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64
-                bootable: true
-          ignore_errors: true
+            vm_enforcing: false      # False allows VM to start even if hosts cannot be met
+            vm_rule: positive
+            host_enforcing: false    # False will allow hosts not listed to be used if needed
+            host_rule: positive
+            vms: []
+            hosts: "{{ a_list }}"
 
-        # Create template from VM
-        - ovirt_template:
-            auth: "{{ ovirt_auth }}"
-            name: CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64
-            description: CentOS 8.1 Generic Cloud Image
-            vm: c8_temp_vm
-            seal: true
 
-        # Delete temp VM
-        - ovirt_vm:
+        - name: Create and assign affinity group to VMs b-vm1 and b-vm2 with b-host1 and b-host2
+          ovirt_affinity_group:
             auth: "{{ ovirt_auth }}"
-            name: c8_temp_vm
-            state: absent
+            name: az-b
+            cluster: Support
+            vm_enforcing: false
+            vm_rule: positive
+            host_enforcing: false
+            host_rule: positive
+            vms: []
+            hosts: "{{ b_list }}"
+
 
 
 
