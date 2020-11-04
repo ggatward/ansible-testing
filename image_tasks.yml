@@ -26,36 +26,44 @@
             username: admin@internal
             password: "{{ vault_ovirt_admin_password }}"
 
+        # - name: Install guestfish
+        #   yum:
+        #     name: libguestfs-tools
+        #     state: present
 
-        - name: Get disk image sizes
-          command: qemu-img info {{ item.path }}
-          register: disk
-          changed_when: false
-          loop: "{{ disk_images }}"
+        # - name: Set root password on the image
+        #   command: virt-customize -a CentOS-7-x86_64-GenericCloud-2003.qcow2 --root-password password:ChangeMe
 
-        - name: Import disk images
-          ovirt_disk:
-            auth: "{{ ovirt_auth }}"
-            name: "{{ item.item.name }}"
-            description: "{{ item.item.description }}"
-            upload_image_path: "{{ item.item.path }}"
-            storage_domain: VMstore
-            size: "{{item.stdout | regex_search('virtual size:(.+)\\(', '\\1') | first | replace(' ','')}}"
-          loop: "{{ disk.results }}"
 
-        - name: Check if templates already exist
-          ovirt_template_info:
-            auth: "{{ ovirt_auth }}"
-            pattern: name={{ item.item.name }}
-          register: templates
-          loop: "{{ disk.results }}"
+        # - name: Get disk image sizes
+        #   command: qemu-img info {{ item.path }}
+        #   register: disk
+        #   changed_when: false
+        #   loop: "{{ disk_images }}"
 
-        - debug:
-            msg: "{{ templates.results }}"
+        # - name: Import disk images
+        #   ovirt_disk:
+        #     auth: "{{ ovirt_auth }}"
+        #     name: "{{ item.item.name }}"
+        #     description: "{{ item.item.description }}"
+        #     upload_image_path: "{{ item.item.path }}"
+        #     storage_domain: VMstore
+        #     size: "{{item.stdout | regex_search('virtual size:(.+)\\(', '\\1') | first | replace(' ','')}}"
+        #   loop: "{{ disk.results }}"
 
-        - debug:
-            msg: "{{ item.ovirt_templates }}"
-          loop: "{{ templates.results }}"
+        # - name: Check if templates already exist
+        #   ovirt_template_info:
+        #     auth: "{{ ovirt_auth }}"
+        #     pattern: name={{ item.item.name }}
+        #   register: templates
+        #   loop: "{{ disk.results }}"
+
+        # - debug:
+        #     msg: "{{ templates.results }}"
+
+        # - debug:
+        #     msg: "{{ item.ovirt_templates }}"
+        #   loop: "{{ templates.results }}"
 
 
 
@@ -98,42 +106,49 @@
         # - debug:
         #     msg: "{{result}}"
 
-        # # Create temp VM using disk
-        # - ovirt_vm:
-        #     auth: "{{ ovirt_auth }}"
-        #     name: c8_temp_vm
-        #     cluster: Support
-        #     clone: true
-        #     cpu_cores: 2
-        #     #cpu_sockets: 2
-        #     memory: 4GiB
-        #     disks:
-        #       - name: CentOS-7-x86_64-GenericCloud-2003
-        #         bootable: true
-        #     high_availability: false
-        #     nics:
-        #       - name: mynic
-        #         profile_name: Vlan6
-        #     placement_policy: migratable
-        #     type: server
-        #     graphical_console:
-        #       protocol: spice
-        #     cloud_init:
-        #       dns_servers: '8.8.8.8 8.8.4.4'
-        #       nic_boot_protocol: static
-        #       nic_ip_address: 172.22.6.66
-        #       nic_netmask: 255.255.255.0
-        #       nic_gateway: 172.22.6.1
-        #       nic_name: eth0
-        #       host_name: test.example.com
-        #       user_name: root
-        #       root_password: ChangeMe
-
-
-        #   ignore_errors: true
-
-
-
+        # Create temp VM using disk
+        - ovirt_vm:
+            auth: "{{ ovirt_auth }}"
+            name: c8_temp_vm
+            cluster: Support
+            template: CentOS-7-x86_64-GenericCloud-2003
+            cpu_cores: 2
+            #cpu_sockets: 2
+            memory: 4GiB
+            state: running
+            high_availability: false
+            nics:
+              - name: eth0
+                profile_name: Vlan6
+              # - name: eth1
+              #   profile_name: Lab
+            placement_policy: migratable
+            type: server
+            cloud_init:
+              dns_servers: '8.8.8.8 8.8.4.4'
+              host_name: test.example.com
+              # custom_script: |
+              #   users:
+              #     - name: root
+              #     - name: ansible
+              #       groups: wheel
+              #   chpasswd:
+              #     list: |
+              #       root: ChangeMe
+              #       ansible: ChangeMe
+              #     expire: False
+              #   ssh_pwauth: True
+            cloud_init_nics:
+            - nic_name: eth0
+              nic_boot_protocol: static
+              nic_ip_address: 172.22.6.66
+              nic_netmask: 255.255.255.0
+              nic_gateway: 172.22.6.1
+              nic_on_boot: True
+            # - nic_name: eth1
+            #   nic_boot_protocol: static
+            #   nic_ip_address: 172.22.4.66
+            #   nic_netmask: 255.255.255.0
 
 
 
