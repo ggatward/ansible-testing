@@ -115,7 +115,8 @@
             cpu_cores: 2
             #cpu_sockets: 2
             memory: 4GiB
-            state: running
+            #state: running
+            state: present
             high_availability: false
             nics:
               - name: eth0
@@ -123,21 +124,18 @@
               # - name: eth1
               #   profile_name: Lab
             placement_policy: migratable
+            # disks:
+            #   - size: 30GiB
+            #     name_prefix: false
+            #     name: mydisk
             type: server
+            cloud_init_persist: true
             cloud_init:
               dns_servers: '8.8.8.8 8.8.4.4'
               host_name: test.example.com
-              # custom_script: |
-              #   users:
-              #     - name: root
-              #     - name: ansible
-              #       groups: wheel
-              #   chpasswd:
-              #     list: |
-              #       root: ChangeMe
-              #       ansible: ChangeMe
-              #     expire: False
-              #   ssh_pwauth: True
+              custom_script: |
+                users:
+                  - name: ansible
             cloud_init_nics:
             - nic_name: eth0
               nic_boot_protocol: static
@@ -149,8 +147,7 @@
             #   nic_boot_protocol: static
             #   nic_ip_address: 172.22.4.66
             #   nic_netmask: 255.255.255.0
-
-
+          register: vm
 
 
       always:

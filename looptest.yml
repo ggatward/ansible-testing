@@ -1,0 +1,46 @@
+---
+- name: Loop Test
+  hosts: all
+  connection: local
+  gather_facts: false
+  collections:
+  - ovirt.ovirt
+  vars_files:
+  - vault.yml
+  tasks:
+  - name: Obtain SSO token with using username/password credentials
+    ovirt.ovirt.ovirt_auth:
+      url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
+      username: admin@internal
+      password: "{{ vault_ovirt_admin_password }}"
+    delegate_to: localhost
+    run_once: true
+
+  - block:
+    - ovirt_vm_os_info:
+        auth: "{{ ovirt_auth }}"
+      register: result
+      delegate_to: localhost
+
+    - debug:
+        msg: "{{ result }}"
+      delegate_to: localhost
+    when: testvar is defined
+
+  - name: Always revoke the SSO token
+    ovirt_auth:
+      state: absent
+      ovirt_auth: "{{ ovirt_auth }}"
+    delegate_to: localhost
+    run_once: true
+
+###############################################
+- name: Command Test
+  hosts: all
+  become: true
+  become_user: root
+  collections:
+  - ovirt.ovirt
+  tasks:
+  - debug:
+      msg: "{{ ansible_fqdn }}"
