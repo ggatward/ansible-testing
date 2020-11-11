@@ -8,43 +8,40 @@
     - vault.yml
 
   tasks:
-    - block:
-        - name: Obtain SSO token with using username/password credentials
-          ovirt.ovirt.ovirt_auth:
-            url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
-            username: admin@internal
-            password: "{{ vault_ovirt_admin_password }}"
+    - name: Obtain SSO token with using username/password credentials
+      ovirt.ovirt.ovirt_auth:
+        url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
+        username: admin@internal
+        password: "{{ vault_ovirt_admin_password }}"
 
-        - name: Remove default cluster
-          ovirt_cluster:
-            auth: "{{ ovirt_auth }}"
-            name: Default
-            state: absent
+    - name: Remove default cluster
+      ovirt_cluster:
+        auth: "{{ ovirt_auth }}"
+        name: Default
+        state: absent
 
-        - name: Remove default datacenter
-          ovirt_datacenter:
-            auth: "{{ ovirt_auth }}"
-            name: Default
-            state: absent
+    - name: Remove default datacenter
+      ovirt_datacenter:
+        auth: "{{ ovirt_auth }}"
+        name: Default
+        state: absent
 
-        - name: Add hosts
-          ovirt_host:
-            auth: "{{ ovirt_auth }}"
-            cluster: Support
-            name: baremetal3.lab.home.gatwards.org
-            password: "{{ vault_ovirt_admin_password }}"
-            address: 172.22.4.251
-            override_iptables: false
-            hosted_engine: deploy
-            kdump_integration: disabled
-            kernel_params:
-              - kvm-intel.nested=1
-              - intel_iommu=on
-            power_management_enabled: false
+    - name: Add hosts
+      ovirt_host:
+        auth: "{{ ovirt_auth }}"
+        cluster: Support
+        name: baremetal3.lab.home.gatwards.org
+        password: "{{ vault_ovirt_admin_password }}"
+        address: 172.22.4.251
+        override_iptables: false
+        hosted_engine: deploy
+        kdump_integration: disabled
+        kernel_params:
+          - kvm-intel.nested=1
+          - intel_iommu=on
+        power_management_enabled: false
 
-
-      always:
-        - name: Always revoke the SSO token
-          ovirt_auth:
-            state: absent
-            ovirt_auth: "{{ ovirt_auth }}"
+    - name: Always revoke the SSO token
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
