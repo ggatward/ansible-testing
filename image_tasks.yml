@@ -18,6 +18,46 @@
       description: CentOS 8.2 Generic Cloud Image
       ostype: rhel_8x64
 
+    ovirt_vm:
+    - name: c7_test_vm
+      cluster: Support
+      template: CentOS-7-x86_64-GenericCloud-2003
+      cores: 2
+      #sockets: 2
+      memory: 4GiB
+      #state: running
+      high_availability: false
+      nics:
+        - name: eth0
+          network: Vlan6
+        # - name: eth1
+        #   profile_name: Lab
+      placement_policy: migratable
+      disks:
+        - name: CentOS-7-x86_64-GenericCloud-2003
+          size: 30GiB
+          name_prefix: false
+          interface: virtio_iscsi
+      type: server
+      cloud_init:
+        dns_servers: '8.8.8.8 8.8.4.4'
+        host_name: test.example.com
+        custom_script: |
+          users:
+            - name: ansible
+              groups: wheel
+      cloud_init_nics:
+      - nic_name: eth0
+        nic_boot_protocol: static
+        nic_ip_address: 172.22.6.66
+        nic_netmask: 255.255.255.0
+        nic_gateway: 172.22.6.1
+        nic_on_boot: True
+      # - nic_name: eth1
+      #   nic_boot_protocol: static
+      #   nic_ip_address: 172.22.4.66
+      #   nic_netmask: 255.255.255.0
+
   tasks:
     - block:
         - name: Obtain SSO token with using username/password credentials
@@ -25,14 +65,6 @@
             url: https://testengine.lab.home.gatwards.org/ovirt-engine/api
             username: admin@internal
             password: "{{ vault_ovirt_admin_password }}"
-
-        # - name: Install guestfish
-        #   yum:
-        #     name: libguestfs-tools
-        #     state: present
-
-        # - name: Set root password on the image
-        #   command: virt-customize -a CentOS-7-x86_64-GenericCloud-2003.qcow2 --root-password password:ChangeMe
 
 
         # - name: Get disk image sizes
@@ -51,103 +83,57 @@
         #     size: "{{item.stdout | regex_search('virtual size:(.+)\\(', '\\1') | first | replace(' ','')}}"
         #   loop: "{{ disk.results }}"
 
-        # - name: Check if templates already exist
-        #   ovirt_template_info:
-        #     auth: "{{ ovirt_auth }}"
-        #     pattern: name={{ item.item.name }}
-        #   register: templates
-        #   loop: "{{ disk.results }}"
 
-        # - debug:
-        #     msg: "{{ templates.results }}"
+        - import_role:
+            name: ovirt.ovirt.vm_infra
+          vars:
+            vms: "{{ ovirt_vm }}"
 
-        # - debug:
-        #     msg: "{{ item.ovirt_templates }}"
-        #   loop: "{{ templates.results }}"
 
 
 
         # # Create temp VM using disk
         # - ovirt_vm:
         #     auth: "{{ ovirt_auth }}"
-        #     name: "temp-{{ item.item.name }}"
+        #     name: c8_temp_vm
         #     cluster: Support
-        #     disks:
-        #     - name: "{{ item.item.name }}"
-        #       bootable: true
-        #     graphical_console:
-        #       protocol: spice
-        #     operating_system: "{{ item.item.ostype }}"
-        #   loop: "{{ disk.results }}"
-
-        # # Create template from VM
-        # - ovirt_template:
-        #     auth: "{{ ovirt_auth }}"
-        #     name: "{{ item.item.name }}"
-        #     cluster: Support
-        #     description: "{{ item.item.description }}"
-        #     vm: "temp-{{ item.item.name }}"
-        #     seal: true
-        #     timezone: Etc/GMT
-        #   loop: "{{ disk.results }}"
-
-        # # Delete temp VM
-        # - ovirt_vm:
-        #     auth: "{{ ovirt_auth }}"
-        #     name: "temp-{{ item.item.name }}"
-        #     state: absent
-        #   loop: "{{ disk.results }}"
-
-
-        # - ovirt_vm_os_info:
-        #     auth: "{{ ovirt_auth }}"
-        #   register: result
-
-        # - debug:
-        #     msg: "{{result}}"
-
-        # Create temp VM using disk
-        - ovirt_vm:
-            auth: "{{ ovirt_auth }}"
-            name: c8_temp_vm
-            cluster: Support
-            template: CentOS-7-x86_64-GenericCloud-2003
-            cpu_cores: 2
-            #cpu_sockets: 2
-            memory: 4GiB
-            #state: running
-            state: present
-            high_availability: false
-            nics:
-              - name: eth0
-                profile_name: Vlan6
-              # - name: eth1
-              #   profile_name: Lab
-            placement_policy: migratable
-            # disks:
-            #   - size: 30GiB
-            #     name_prefix: false
-            #     name: mydisk
-            type: server
-            cloud_init_persist: true
-            cloud_init:
-              dns_servers: '8.8.8.8 8.8.4.4'
-              host_name: test.example.com
-              custom_script: |
-                users:
-                  - name: ansible
-            cloud_init_nics:
-            - nic_name: eth0
-              nic_boot_protocol: static
-              nic_ip_address: 172.22.6.66
-              nic_netmask: 255.255.255.0
-              nic_gateway: 172.22.6.1
-              nic_on_boot: True
-            # - nic_name: eth1
-            #   nic_boot_protocol: static
-            #   nic_ip_address: 172.22.4.66
-            #   nic_netmask: 255.255.255.0
-          register: vm
+        #     template: CentOS-7-x86_64-GenericCloud-2003
+        #     cpu_cores: 2
+        #     #cpu_sockets: 2
+        #     memory: 4GiB
+        #     #state: running
+        #     state: present
+        #     high_availability: false
+        #     nics:
+        #       - name: eth0
+        #         profile_name: Vlan6
+        #       # - name: eth1
+        #       #   profile_name: Lab
+        #     placement_policy: migratable
+        #     # disks:
+        #     #   - size: 30GiB
+        #     #     name_prefix: false
+        #     #     name: mydisk
+        #     type: server
+        #     cloud_init_persist: true
+        #     cloud_init:
+        #       dns_servers: '8.8.8.8 8.8.4.4'
+        #       host_name: test.example.com
+        #       custom_script: |
+        #         users:
+        #           - name: ansible
+        #     cloud_init_nics:
+        #     - nic_name: eth0
+        #       nic_boot_protocol: static
+        #       nic_ip_address: 172.22.6.66
+        #       nic_netmask: 255.255.255.0
+        #       nic_gateway: 172.22.6.1
+        #       nic_on_boot: True
+        #     # - nic_name: eth1
+        #     #   nic_boot_protocol: static
+        #     #   nic_ip_address: 172.22.4.66
+        #     #   nic_netmask: 255.255.255.0
+        #   register: vm
 
 
       always:
