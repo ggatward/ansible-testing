@@ -38,8 +38,6 @@
             nic_gateway: 172.22.4.1
             nic_on_boot: True
 
-
-
   tasks:
     - block:
         - name: Obtain SSO token with using username/password credentials
